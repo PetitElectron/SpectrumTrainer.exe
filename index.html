@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    
+  <meta charset="UTF-8">
+  <title>Spectrum Trainer</title>
+  <meta name="author" content="Petit Electron">
+  <meta name="copyright" content="© 2026 Petit Electron">
+  <link rel="icon" type="image/x-icon" href="favicon.ico.png">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+  
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: black;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Press Start 2P', monospace;
+      overflow: hidden;
+    }
+  
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  
+    .window {
+      width: 430px;
+      background: #c0c0c0;
+
+      border-top: 3px solid #ffffff;
+      border-left: 3px solid #ffffff;
+      border-right: 3px solid #404040;
+      border-bottom: 3px solid #404040;
+      
+      box-shadow: 6px 6px 0px #000000;
+    }
+  
+    .title-bar {
+      background: linear-gradient(to right, #000080, #0000ff);
+      color: white;
+      padding: 5px;
+      font-size: 10px;
+    }
+
+    .title {
+        margin-left: 10px;
+    }
+
+    .cursor {
+        display: inline-block;
+        margin-left: 4px;
+        animation: blink 1s steps(2, start) infinite;
+    }
+
+    @keyframes blink {
+        to {
+            visibility: hidden;
+        }
+    }
+  
+    .content {
+      padding: 20px;
+      text-align: center;
+    }
+    
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url("https://media.tenor.com/b3pZMIW1I-UAAAAM/audio-beat.gif") center center / cover no-repeat;
+        z-index: -2;
+    }
+    
+    body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        
+        background: rgba(0, 0, 0, 0.95); 
+        z-index: -1;
+
+    }
+
+  
+    button {
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  padding: 6px 18px;
+  margin: 5px;
+
+  background: #c0c0c0;
+
+  border-top: 3px solid #ffffff;
+  border-left: 3px solid #ffffff;
+  border-right: 3px solid #404040;
+  border-bottom: 3px solid #404040;
+
+  cursor: pointer;
+}
+
+button:active {
+  border-top: 3px solid #404040;
+  border-left: 3px solid #404040;
+  border-right: 3px solid #ffffff;
+  border-bottom: 3px solid #ffffff;
+}
+
+  
+input {
+  font-family: 'VT323', monospace;
+  font-size: 25px;
+  text-align: center;
+  padding: 5px;
+  width: 120px;
+
+  background: white;
+
+  border-top: 3px solid #404040;
+  border-left: 3px solid #404040;
+  border-right: 3px solid #ffffff;
+  border-bottom: 3px solid #ffffff;
+}
+
+    #result {
+      margin-top: 10px;
+      font-size: 12px;
+    }
+
+
+.footer {
+  margin-top: 15px;
+  font-size: 8px;
+  text-align: center;
+  color: #ada6a6;
+}
+
+  </style>
+  
+</head>
+<body>
+    <div class="container">
+      <div class="window">
+        <div class="title-bar">
+        <div class="title">Spectrum Trainer.exe<span class="cursor">|</span></div>
+        </div>
+        <div class="content">
+          <button onclick="playTone()">Play Tone</button><button id ="replayBtn" onclick="replayTone()" disabled>Replay</button>
+
+          <br><br>
+          <input type="text" id="guess" placeholder="Hz">
+          <button onclick="checkAnswer()">Check</button>
+    
+          <div id="result"></div>
+          <div class="footer">
+            © 2026 Petit Electron
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  <script>
+    let audioContext;
+    let oscillator;
+    let currentFrequency = 0;
+    let roundActive = false;
+
+    function getRandomLogFrequency(min, max) {
+        const minLog = Math.log(min);
+        const maxLog = Math.log(max);
+        const randomLog = minLog + Math.random() * (maxLog - minLog);
+        return Math.round(Math.exp(randomLog));
+    }
+
+
+
+
+    function playTone() {
+        
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (oscillator) {
+        try {
+            oscillator.stop();
+        } catch (e) {}
+    }
+        
+    
+        document.getElementById("replayBtn").disabled = false;
+      const gainNode = audioContext.createGain();
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+
+      currentFrequency = getRandomLogFrequency(150, 10000);
+      roundActive = true;
+
+      oscillator = audioContext.createOscillator();
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(currentFrequency, audioContext.currentTime);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.start();
+
+      
+
+      setTimeout(() => {
+        oscillator.stop();
+      }, 1000);
+      document.getElementById("guess").focus();
+
+    }
+
+    function replayTone() {
+        if (!roundActive || !currentFrequency) return;
+        if (oscillator) {
+            try {
+                oscillator.stop();
+            } catch (e) {}}
+            oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            oscillator.type = "square";
+            oscillator.frequency.setValueAtTime(currentFrequency, audioContext.currentTime);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            setTimeout(() => {
+                if (oscillator) oscillator.stop();
+            }, 1000);
+            document.getElementById("guess").focus();
+
+    }
+    
+
+
+    function checkAnswer() {
+        
+        if (!roundActive) {
+            document.getElementById("result").innerText = "First click on 'Play Tone'.";
+            return;
+        }
+        document.getElementById("replayBtn").disabled = true;
+
+        
+      const guess = parseInt(document.getElementById("guess").value);
+      
+      const diffRatio = Math.abs(Math.log(guess / currentFrequency));
+
+
+      let message = "";
+
+
+      if (diffRatio < 0.30) {
+        message = "Great Job. " + currentFrequency + " Hz";
+    } else if (diffRatio < 0.50) {
+        message = "Not bad. " + currentFrequency + " Hz";
+    } else {
+        message = "Too far. " + currentFrequency + " Hz";
+    }
+
+ 
+      document.getElementById("result").innerText = message;
+ 
+      roundActive = false;
+      setTimeout(() => {
+        document.getElementById("result").innerText = "";
+        document.getElementById("guess").value = "";
+    }, 1500);
+
+
+
+    }
+    document.getElementById("guess").addEventListener("keydown", function(event) {
+        if (event.key === "Enter" || event.code === "Space") {
+            event.preventDefault();
+            checkAnswer();
+    
+        }
+    });
+
+
+
+  </script>
+
+</body>
+</html>
